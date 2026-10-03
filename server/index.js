@@ -21,6 +21,10 @@ app.get("/", (req, res) => {
   });
 });
 
+// ==========================================
+// 1. ANALYZE UI
+// ==========================================
+
 app.post("/api/analyze", async (req, res) => {
   try {
     const { imageBase64, mimeType } = req.body;
@@ -31,72 +35,72 @@ app.post("/api/analyze", async (req, res) => {
       });
     }
 
-  const response = await ai.models.generateContent({
-  model: "gemma-4-26b-a4b-it",
+    const response = await ai.models.generateContent({
+      model: "gemma-4-26b-a4b-it",
 
-  config: {
-    responseMimeType: "application/json",
+      config: {
+        responseMimeType: "application/json",
 
-    responseSchema: {
-      type: "object",
-      properties: {
-        uiElements: {
-          type: "array",
-          items: { type: "string" },
-        },
-
-        layout: {
+        responseSchema: {
           type: "object",
           properties: {
-            description: { type: "string" },
-            sections: {
+            uiElements: {
+              type: "array",
+              items: { type: "string" },
+            },
+
+            layout: {
+              type: "object",
+              properties: {
+                description: { type: "string" },
+                sections: {
+                  type: "array",
+                  items: { type: "string" },
+                },
+              },
+            },
+
+            colors: {
+              type: "array",
+              items: { type: "string" },
+            },
+
+            typography: {
+              type: "object",
+              properties: {
+                heading: { type: "string" },
+                body: { type: "string" },
+                notes: { type: "string" },
+              },
+            },
+
+            buttons: {
+              type: "array",
+              items: { type: "string" },
+            },
+
+            navigation: {
+              type: "array",
+              items: { type: "string" },
+            },
+
+            cardsOrSections: {
+              type: "array",
+              items: { type: "string" },
+            },
+
+            accessibilityIssues: {
+              type: "array",
+              items: { type: "string" },
+            },
+
+            suggestions: {
               type: "array",
               items: { type: "string" },
             },
           },
         },
-
-        colors: {
-          type: "array",
-          items: { type: "string" },
-        },
-
-        typography: {
-          type: "object",
-          properties: {
-            heading: { type: "string" },
-            body: { type: "string" },
-            notes: { type: "string" },
-          },
-        },
-
-        buttons: {
-          type: "array",
-          items: { type: "string" },
-        },
-
-        navigation: {
-          type: "array",
-          items: { type: "string" },
-        },
-
-        cardsOrSections: {
-          type: "array",
-          items: { type: "string" },
-        },
-
-        accessibilityIssues: {
-          type: "array",
-          items: { type: "string" },
-        },
-
-        suggestions: {
-          type: "array",
-          items: { type: "string" },
-        },
       },
-    },
-  },
 
       contents: [
         {
@@ -105,8 +109,9 @@ app.post("/api/analyze", async (req, res) => {
             data: imageBase64,
           },
         },
+
         {
-         text: `
+          text: `
 You are UI Detective, an AI tool that analyzes website screenshots.
 
 Analyze the provided website screenshot.
@@ -148,19 +153,18 @@ Rules:
 - accessibilityIssues: only mention issues that can reasonably be inferred from the screenshot.
 - suggestions: give practical UI improvement suggestions.
 - Do not invent information that cannot be reasonably inferred from the screenshot.
-
           `,
         },
       ],
     });
 
-   const analysis = JSON.parse(response.text);
+    const analysis = JSON.parse(response.text);
 
-res.json({
-  analysis,
-});
+    res.json({
+      analysis,
+    });
   } catch (error) {
-    console.error("Gemma error:", error);
+    console.error("Gemma analysis error:", error);
 
     res.status(500).json({
       error: "Failed to analyze the UI",
@@ -168,6 +172,76 @@ res.json({
   }
 });
 
+// ==========================================
+// 2. GENERATE REACT CODE
+// ==========================================
+
+app.post("/api/generate-code", async (req, res) => {
+  try {
+    const { analysis } = req.body;
+
+    if (!analysis) {
+      return res.status(400).json({
+        error: "No UI analysis provided",
+      });
+    }
+
+    const response = await ai.models.generateContent({
+      model: "gemma-4-26b-a4b-it",
+
+      contents: [
+        {
+          text: `
+You are an expert React developer.
+
+UI Detective has analyzed a website screenshot.
+
+Your job is to generate React code that recreates the UI described by the analysis.
+
+Here is the UI analysis:
+
+${JSON.stringify(analysis, null, 2)}
+
+Requirements:
+
+1. Generate a complete React component.
+2. Use functional React components.
+3. Use JSX.
+4. Use normal CSS classes.
+5. Do not use external UI libraries.
+6. Do not use Tailwind.
+7. Do not use markdown code fences.
+8. Do not add explanations before or after the code.
+9. Keep the code clean and readable.
+10. Use placeholder images if the screenshot contains images.
+11. Recreate the layout, colors, typography, buttons and navigation described in the analysis.
+12. Make the UI responsive.
+13. Return ONLY the React JSX code.
+
+The output should be directly usable inside a React project.
+          `,
+        },
+      ],
+    });
+
+    res.json({
+      code: response.text,
+    });
+  } catch (error) {
+    console.error("Gemma code generation error:", error);
+
+    res.status(500).json({
+      error: "Failed to generate React code",
+    });
+  }
+});
+
+// ==========================================
+// START SERVER
+// ==========================================
+
 app.listen(PORT, () => {
-  console.log(`UI Detective backend running on http://localhost:${PORT}`);
+  console.log(
+    `UI Detective backend running on http://localhost:${PORT}`
+  );
 });
