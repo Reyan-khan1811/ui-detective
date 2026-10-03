@@ -31,8 +31,73 @@ app.post("/api/analyze", async (req, res) => {
       });
     }
 
-    const response = await ai.models.generateContent({
-      model: "gemma-4-26b-a4b-it",
+  const response = await ai.models.generateContent({
+  model: "gemma-4-26b-a4b-it",
+
+  config: {
+    responseMimeType: "application/json",
+
+    responseSchema: {
+      type: "object",
+      properties: {
+        uiElements: {
+          type: "array",
+          items: { type: "string" },
+        },
+
+        layout: {
+          type: "object",
+          properties: {
+            description: { type: "string" },
+            sections: {
+              type: "array",
+              items: { type: "string" },
+            },
+          },
+        },
+
+        colors: {
+          type: "array",
+          items: { type: "string" },
+        },
+
+        typography: {
+          type: "object",
+          properties: {
+            heading: { type: "string" },
+            body: { type: "string" },
+            notes: { type: "string" },
+          },
+        },
+
+        buttons: {
+          type: "array",
+          items: { type: "string" },
+        },
+
+        navigation: {
+          type: "array",
+          items: { type: "string" },
+        },
+
+        cardsOrSections: {
+          type: "array",
+          items: { type: "string" },
+        },
+
+        accessibilityIssues: {
+          type: "array",
+          items: { type: "string" },
+        },
+
+        suggestions: {
+          type: "array",
+          items: { type: "string" },
+        },
+      },
+    },
+  },
+
       contents: [
         {
           inlineData: {
@@ -41,32 +106,59 @@ app.post("/api/analyze", async (req, res) => {
           },
         },
         {
-          text: `
+         text: `
 You are UI Detective, an AI tool that analyzes website screenshots.
 
-Analyze the provided screenshot.
+Analyze the provided website screenshot.
 
-Identify:
+Return ONLY valid JSON.
+Do not use markdown.
+Do not add explanations before or after the JSON.
 
-1. UI elements
-2. Overall layout
-3. Colors
-4. Typography
-5. Buttons and interactive elements
-6. Navigation
-7. Cards or sections
-8. Possible accessibility issues
-9. Suggestions for improving the UI
+Use exactly this structure:
 
-Give a clear, structured analysis.
+{
+  "uiElements": [],
+  "layout": {
+    "description": "",
+    "sections": []
+  },
+  "colors": [],
+  "typography": {
+    "heading": "",
+    "body": "",
+    "notes": ""
+  },
+  "buttons": [],
+  "navigation": [],
+  "cardsOrSections": [],
+  "accessibilityIssues": [],
+  "suggestions": []
+}
+
+Rules:
+- uiElements: list the visible UI elements.
+- layout.description: describe the overall layout.
+- layout.sections: list major page sections.
+- colors: list important visible colors and their usage.
+- typography: describe visible typography.
+- buttons: list visible buttons and their purpose if identifiable.
+- navigation: list visible navigation items.
+- cardsOrSections: list cards or major content sections.
+- accessibilityIssues: only mention issues that can reasonably be inferred from the screenshot.
+- suggestions: give practical UI improvement suggestions.
+- Do not invent information that cannot be reasonably inferred from the screenshot.
+
           `,
         },
       ],
     });
 
-    res.json({
-      analysis: response.text,
-    });
+   const analysis = JSON.parse(response.text);
+
+res.json({
+  analysis,
+});
   } catch (error) {
     console.error("Gemma error:", error);
 
