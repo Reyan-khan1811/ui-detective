@@ -158,7 +158,15 @@ Rules:
       ],
     });
 
-    const analysis = JSON.parse(response.text);
+ const text = response.text.trim();
+const jsonStart = text.indexOf("{");
+const jsonEnd = text.lastIndexOf("}");
+
+if (jsonStart === -1 || jsonEnd === -1) {
+  throw new Error("Gemma did not return valid JSON");
+}
+
+const analysis = JSON.parse(text.slice(jsonStart, jsonEnd + 1));
 
     res.json({
       analysis,
