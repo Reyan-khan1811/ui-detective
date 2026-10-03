@@ -6,10 +6,11 @@ import { GoogleGenAI } from "@google/genai";
 dotenv.config({ path: ".env.local" });
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
+app.use(express.static("dist"));
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
@@ -253,3 +254,4 @@ app.listen(PORT, () => {
     `UI Detective backend running on http://localhost:${PORT}`
   );
 });
+
