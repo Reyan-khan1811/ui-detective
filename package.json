@@ -10,10 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+<<<<<<< HEAD
+=======
     "@google/genai": "^2.27.0",
     "cors": "^2.8.6",
     "dotenv": "^18.0.5",
     "express": "^5.2.1",
+>>>>>>> origin/gemma-integration
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
